@@ -17,6 +17,16 @@ const DEFAULT_JSON_ACCEPT = "application/json, application/problem+json";
 
 let _baseUrl: string | null = null;
 let _authTokenGetter: AuthTokenGetter | null = null;
+let _guestIdGetter: (() => string | null) | null = null;
+
+/**
+ * Register a getter that supplies the X-Guest-Id header value.
+ * Called before every fetch; when it returns a non-null string the header
+ * is attached so the API can scope data to the correct guest session.
+ */
+export function setGuestIdGetter(getter: (() => string | null) | null): void {
+  _guestIdGetter = getter;
+}
 
 /**
  * Set a base URL that is prepended to every relative request URL
@@ -355,6 +365,14 @@ export async function customFetch<T = unknown>(
     const token = await _authTokenGetter();
     if (token) {
       headers.set("authorization", `Bearer ${token}`);
+    }
+  }
+
+  // Attach guest/demo user ID for per-user data isolation.
+  if (_guestIdGetter && !headers.has("x-guest-id")) {
+    const guestId = _guestIdGetter();
+    if (guestId) {
+      headers.set("x-guest-id", guestId);
     }
   }
 

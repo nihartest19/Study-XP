@@ -4,6 +4,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/lib/auth";
 import { Layout } from "@/components/layout";
+import { setGuestIdGetter } from "@workspace/api-client-react";
+import { useEffect } from "react";
 
 import Landing from "@/pages/landing";
 import Login from "@/pages/login";
@@ -15,6 +17,10 @@ import Settings from "@/pages/settings";
 import NotFound from "@/pages/not-found";
 
 const queryClient = new QueryClient();
+
+// Wire up the guest ID getter once at module level so every API request
+// automatically includes the X-Guest-Id header from localStorage.
+setGuestIdGetter(() => localStorage.getItem("study_xp_guest_id"));
 
 function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
   const { isLoggedIn } = useAuth();

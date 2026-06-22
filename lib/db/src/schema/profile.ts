@@ -1,9 +1,10 @@
-import { pgTable, text, serial, integer, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
 export const profileTable = pgTable("profile", {
   id: serial("id").primaryKey(),
+  userId: text("user_id").notNull().default("demo"),
   name: text("name").notNull().default("Student"),
   xp: integer("xp").notNull().default(0),
   level: integer("level").notNull().default(1),
@@ -13,7 +14,7 @@ export const profileTable = pgTable("profile", {
   avatar: text("avatar"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
-});
+}, (t) => [uniqueIndex("profile_user_id_idx").on(t.userId)]);
 
 export const insertProfileSchema = createInsertSchema(profileTable).omit({ id: true, createdAt: true, updatedAt: true });
 export type InsertProfile = z.infer<typeof insertProfileSchema>;

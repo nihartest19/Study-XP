@@ -1,16 +1,23 @@
 import { Router, type IRouter } from "express";
-import { eq, sql } from "drizzle-orm";
+import { eq, and, sql } from "drizzle-orm";
 import { db, subjectsTable, tasksTable } from "@workspace/db";
 import { CreateSubjectBody, GetSubjectsResponse, GetSubjectsResponseItem } from "@workspace/api-zod";
 
 const router: IRouter = Router();
 
 router.get("/subjects", async (req, res): Promise<void> => {
-  const subjects = await db.select().from(subjectsTable).orderBy(subjectsTable.name);
+  const subjects = await db
+    .select()
+    .from(subjectsTable)
+    .where(eq(subjectsTable.userId, req.userId))
+    .orderBy(subjectsTable.name);
+
   const taskCounts = await db
     .select({ subjectId: tasksTable.subjectId, count: sql<number>`count(*)::int` })
     .from(tasksTable)
+    .where(eq(tasksTable.userId, req.userId))
     .groupBy(tasksTable.subjectId);
+
   const countMap = new Map(taskCounts.map((r) => [r.subjectId, r.count]));
   const result = subjects.map((s) => ({ ...s, taskCount: countMap.get(s.id) ?? 0 }));
   res.json(GetSubjectsResponse.parse(result));
@@ -22,7 +29,10 @@ router.post("/subjects", async (req, res): Promise<void> => {
     res.status(400).json({ error: parsed.error.message });
     return;
   }
-  const [subject] = await db.insert(subjectsTable).values(parsed.data).returning();
+  const [subject] = await db
+    .insert(subjectsTable)
+    .values({ ...parsed.data, userId: req.userId })
+    .returning();
   res.status(201).json(GetSubjectsResponseItem.parse({ ...subject, taskCount: 0 }));
 });
 

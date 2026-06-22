@@ -2,54 +2,58 @@ import { Router, type IRouter } from "express";
 import { eq, gte, sql, and } from "drizzle-orm";
 import { db, tasksTable, profileTable, subjectsTable } from "@workspace/db";
 import { GetStatsResponse } from "@workspace/api-zod";
+import { getOrCreateProfile } from "./profile";
 
 const router: IRouter = Router();
 
 router.get("/stats", async (req, res): Promise<void> => {
+  const userId = req.userId;
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   const weekAgo = new Date(today);
   weekAgo.setDate(weekAgo.getDate() - 7);
 
-  const todayCompleted = await db
+  const userCompleted = and(eq(tasksTable.userId, userId), eq(tasksTable.completed, true));
+
+  const [todayCompleted] = await db
     .select({ count: sql<number>`count(*)::int` })
     .from(tasksTable)
-    .where(and(eq(tasksTable.completed, true), gte(tasksTable.completedAt, today)));
+    .where(and(userCompleted, gte(tasksTable.completedAt, today)));
 
-  const weekCompleted = await db
+  const [weekCompleted] = await db
     .select({ count: sql<number>`count(*)::int` })
     .from(tasksTable)
-    .where(and(eq(tasksTable.completed, true), gte(tasksTable.completedAt, weekAgo)));
+    .where(and(userCompleted, gte(tasksTable.completedAt, weekAgo)));
 
-  const xpToday = await db
+  const [xpToday] = await db
     .select({ total: sql<number>`coalesce(sum(xp_reward), 0)::int` })
     .from(tasksTable)
-    .where(and(eq(tasksTable.completed, true), gte(tasksTable.completedAt, today)));
+    .where(and(userCompleted, gte(tasksTable.completedAt, today)));
 
-  const xpWeek = await db
+  const [xpWeek] = await db
     .select({ total: sql<number>`coalesce(sum(xp_reward), 0)::int` })
     .from(tasksTable)
-    .where(and(eq(tasksTable.completed, true), gte(tasksTable.completedAt, weekAgo)));
+    .where(and(userCompleted, gte(tasksTable.completedAt, weekAgo)));
 
-  const totalCompleted = await db
+  const [totalCompleted] = await db
     .select({ count: sql<number>`count(*)::int` })
     .from(tasksTable)
-    .where(eq(tasksTable.completed, true));
+    .where(userCompleted);
 
-  let [profile] = await db.select().from(profileTable).limit(1);
-  if (!profile) {
-    [profile] = await db.insert(profileTable).values({ name: "Student" }).returning();
-  }
+  const profile = await getOrCreateProfile(userId);
 
-  // Tasks per subject
-  const subjects = await db.select().from(subjectsTable);
+  const subjects = await db
+    .select()
+    .from(subjectsTable)
+    .where(eq(subjectsTable.userId, userId));
+
   const tasksBySubject = await db
     .select({
       subjectId: tasksTable.subjectId,
       count: sql<number>`count(*)::int`,
     })
     .from(tasksTable)
-    .where(eq(tasksTable.completed, true))
+    .where(userCompleted)
     .groupBy(tasksTable.subjectId);
 
   const subjectMap = new Map(subjects.map((s) => [s.id, s]));
@@ -64,11 +68,10 @@ router.get("/stats", async (req, res): Promise<void> => {
       };
     });
 
-  // Recent activity (last 10 completed tasks)
   const recentTasks = await db
     .select()
     .from(tasksTable)
-    .where(eq(tasksTable.completed, true))
+    .where(userCompleted)
     .orderBy(sql`completed_at DESC`)
     .limit(10);
 
@@ -80,16 +83,16 @@ router.get("/stats", async (req, res): Promise<void> => {
 
   res.json(
     GetStatsResponse.parse({
-      tasksCompletedToday: todayCompleted[0]?.count ?? 0,
-      tasksCompletedThisWeek: weekCompleted[0]?.count ?? 0,
-      xpEarnedToday: xpToday[0]?.total ?? 0,
-      xpEarnedThisWeek: xpWeek[0]?.total ?? 0,
-      totalTasksCompleted: totalCompleted[0]?.count ?? 0,
+      tasksCompletedToday: todayCompleted?.count ?? 0,
+      tasksCompletedThisWeek: weekCompleted?.count ?? 0,
+      xpEarnedToday: xpToday?.total ?? 0,
+      xpEarnedThisWeek: xpWeek?.total ?? 0,
+      totalTasksCompleted: totalCompleted?.count ?? 0,
       currentStreak: profile.streak,
       longestStreak: profile.longestStreak,
       tasksPerSubject,
       recentActivity,
-    })
+    }),
   );
 });
 

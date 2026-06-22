@@ -1,4 +1,4 @@
-import { pgTable, text, serial, boolean, integer, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, timestamp, index } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -14,9 +14,10 @@ export const badgeDefinitionsTable = pgTable("badge_definitions", {
 
 export const earnedBadgesTable = pgTable("earned_badges", {
   id: serial("id").primaryKey(),
+  userId: text("user_id").notNull().default("demo"),
   badgeId: integer("badge_id").notNull(),
   earnedAt: timestamp("earned_at", { withTimezone: true }).notNull().defaultNow(),
-});
+}, (t) => [index("earned_badges_user_id_idx").on(t.userId)]);
 
 export const insertBadgeDefinitionSchema = createInsertSchema(badgeDefinitionsTable).omit({ id: true, createdAt: true });
 export type InsertBadgeDefinition = z.infer<typeof insertBadgeDefinitionSchema>;
