@@ -9,24 +9,17 @@
 ---
 
 ## Screenshots
-
 ### Landing Page
-![Landing Page](screenshots/landing-page.png)
+![Landing Page](./landing-page.png)
 
 ### Dashboard
-![Dashboard](screenshots/dashboard.png)
+![Dashboard](./dashboard.png)
 
 ### Quests
-![Quests](screenshots/quests.png)
+![Quests](./quest.png)
 
 ### Badges
-![Badges](screenshots/badges.png)
-
-### Subjects
-![Subjects](screenshots/subjects.png)
-
-### Settings
-![Settings](screenshots/settings.png)
+![Badges](./badges.png)
 
 ## Features
 
