@@ -1,22 +1,30 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Study XP API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: profile
+    description: User profile, XP, level, streak
+  - name: tasks
+    description: Study tasks
+  - name: badges
+    description: Achievement badges
+  - name: subjects
+    description: Study subjects/categories
+  - name: stats
+    description: Dashboard statistics
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,13 +32,377 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /profile:
+    get:
+      operationId: getProfile
+      tags: [profile]
+      summary: Get user profile
+      responses:
+        "200":
+          description: User profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Profile"
+    patch:
+      operationId: updateProfile
+      tags: [profile]
+      summary: Update user profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProfileUpdate"
+      responses:
+        "200":
+          description: Updated profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Profile"
+
+  /tasks:
+    get:
+      operationId: getTasks
+      tags: [tasks]
+      summary: List all study tasks
+      parameters:
+        - name: subjectId
+          in: query
+          schema:
+            type: ["integer", "null"]
+        - name: completed
+          in: query
+          schema:
+            type: ["boolean", "null"]
+      responses:
+        "200":
+          description: List of tasks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Task"
+    post:
+      operationId: createTask
+      tags: [tasks]
+      summary: Create a study task
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TaskInput"
+      responses:
+        "201":
+          description: Created task
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Task"
+
+  /tasks/{id}:
+    patch:
+      operationId: updateTask
+      tags: [tasks]
+      summary: Update a task (edit or mark complete)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TaskUpdate"
+      responses:
+        "200":
+          description: Updated task with XP awarded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TaskUpdateResult"
+    delete:
+      operationId: deleteTask
+      tags: [tasks]
+      summary: Delete a task
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /badges:
+    get:
+      operationId: getBadges
+      tags: [badges]
+      summary: List all badges with earned status
+      responses:
+        "200":
+          description: List of badges
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Badge"
+
+  /subjects:
+    get:
+      operationId: getSubjects
+      tags: [subjects]
+      summary: List study subjects
+      responses:
+        "200":
+          description: List of subjects
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Subject"
+    post:
+      operationId: createSubject
+      tags: [subjects]
+      summary: Create a subject
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SubjectInput"
+      responses:
+        "201":
+          description: Created subject
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Subject"
+
+  /stats:
+    get:
+      operationId: getStats
+      tags: [stats]
+      summary: Get dashboard statistics
+      responses:
+        "200":
+          description: Dashboard stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Stats"
+
 components:
   schemas:
     HealthStatus:
       type: object
+      required: [status]
       properties:
         status:
           type: string
-      required:
-        - status
 
+    Profile:
+      type: object
+      required: [id, name, xp, level, streak, xpToNextLevel, xpForCurrentLevel]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        xp:
+          type: integer
+        level:
+          type: integer
+        streak:
+          type: integer
+        xpToNextLevel:
+          type: integer
+        xpForCurrentLevel:
+          type: integer
+        avatar:
+          type: ["string", "null"]
+
+    ProfileUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        avatar:
+          type: ["string", "null"]
+
+    Task:
+      type: object
+      required: [id, title, completed, xpReward, priority, createdAt]
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        description:
+          type: ["string", "null"]
+        completed:
+          type: boolean
+        xpReward:
+          type: integer
+        priority:
+          type: string
+          enum: [low, medium, high]
+        subjectId:
+          type: ["integer", "null"]
+        subjectName:
+          type: ["string", "null"]
+        subjectColor:
+          type: ["string", "null"]
+        dueDate:
+          type: ["string", "null"]
+        completedAt:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+
+    TaskInput:
+      type: object
+      required: [title, priority]
+      properties:
+        title:
+          type: string
+          minLength: 1
+        description:
+          type: string
+        priority:
+          type: string
+          enum: [low, medium, high]
+        subjectId:
+          type: ["integer", "null"]
+        dueDate:
+          type: ["string", "null"]
+        xpReward:
+          type: integer
+
+    TaskUpdate:
+      type: object
+      properties:
+        title:
+          type: string
+        description:
+          type: ["string", "null"]
+        completed:
+          type: boolean
+        priority:
+          type: string
+          enum: [low, medium, high]
+        subjectId:
+          type: ["integer", "null"]
+        dueDate:
+          type: ["string", "null"]
+
+    TaskUpdateResult:
+      type: object
+      required: [task, xpAwarded, newBadges]
+      properties:
+        task:
+          $ref: "#/components/schemas/Task"
+        xpAwarded:
+          type: integer
+        newBadges:
+          type: array
+          items:
+            $ref: "#/components/schemas/Badge"
+        profile:
+          $ref: "#/components/schemas/Profile"
+
+    Badge:
+      type: object
+      required: [id, name, description, icon, earned, category]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+        icon:
+          type: string
+        earned:
+          type: boolean
+        earnedAt:
+          type: ["string", "null"]
+        category:
+          type: string
+          enum: [streak, tasks, xp, level, subject]
+
+    Subject:
+      type: object
+      required: [id, name, color, taskCount]
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        color:
+          type: string
+        taskCount:
+          type: integer
+
+    SubjectInput:
+      type: object
+      required: [name, color]
+      properties:
+        name:
+          type: string
+          minLength: 1
+        color:
+          type: string
+
+    Stats:
+      type: object
+      required: [tasksCompletedToday, tasksCompletedThisWeek, xpEarnedToday, xpEarnedThisWeek, totalTasksCompleted, currentStreak, longestStreak, tasksPerSubject, recentActivity]
+      properties:
+        tasksCompletedToday:
+          type: integer
+        tasksCompletedThisWeek:
+          type: integer
+        xpEarnedToday:
+          type: integer
+        xpEarnedThisWeek:
+          type: integer
+        totalTasksCompleted:
+          type: integer
+        currentStreak:
+          type: integer
+        longestStreak:
+          type: integer
+        tasksPerSubject:
+          type: array
+          items:
+            type: object
+            required: [subjectName, color, count]
+            properties:
+              subjectName:
+                type: string
+              color:
+                type: string
+              count:
+                type: integer
+        recentActivity:
+          type: array
+          items:
+            type: object
+            required: [taskTitle, xpAwarded, completedAt]
+            properties:
+              taskTitle:
+                type: string
+              xpAwarded:
+                type: integer
+              completedAt:
+                type: string

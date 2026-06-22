@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "Study XP"
+version = "1.0.0"
+id = "artifacts/study-xp"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 19418
+
+[services.development]
+run = "pnpm --filter @workspace/study-xp run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/study-xp", "run", "build" ]
+publicDir = "artifacts/study-xp/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "19418"
+BASE_PATH = "/"
