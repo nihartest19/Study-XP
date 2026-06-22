@@ -55,6 +55,25 @@ export default function Settings() {
     );
   }
 
+  if (!profile) {
+    return (
+      <div className="max-w-2xl space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight flex items-center gap-3">
+            <SettingsIcon className="w-8 h-8 text-primary" />
+            Settings
+          </h1>
+        </div>
+        <Card>
+          <CardContent className="p-12 text-center text-muted-foreground">
+            <User className="w-12 h-12 mx-auto mb-4 opacity-40" />
+            <p>Could not load profile. Please refresh the page.</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-2xl space-y-6">
       <div>

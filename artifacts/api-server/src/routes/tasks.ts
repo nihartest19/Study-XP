@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { eq, and, sql, gte, isNull, isNotNull } from "drizzle-orm";
+import { eq, and, sql, gte } from "drizzle-orm";
 import { db, tasksTable, subjectsTable, profileTable, badgeDefinitionsTable, earnedBadgesTable } from "@workspace/db";
 import {
   GetTasksQueryParams,
@@ -9,7 +9,7 @@ import {
   UpdateTaskBody,
   DeleteTaskParams,
   UpdateTaskResponse,
-  CreateTaskResponse,
+  GetTasksResponseItem,
 } from "@workspace/api-zod";
 import { calcLevel, xpForLevel } from "./profile";
 
@@ -105,7 +105,7 @@ router.post("/tasks", async (req, res): Promise<void> => {
   const subject = task.subjectId ? subjectMap.get(task.subjectId) : null;
 
   res.status(201).json(
-    CreateTaskResponse.parse({
+    GetTasksResponseItem.parse({
       id: task.id,
       title: task.title,
       description: task.description ?? null,

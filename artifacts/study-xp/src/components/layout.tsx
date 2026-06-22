@@ -58,10 +58,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
             <div className="space-y-1.5">
               <div className="flex justify-between text-xs font-mono">
                 <span className="text-muted-foreground">XP</span>
-                <span className="text-primary font-bold">{profile.xp} / {profile.xpToNextLevel + profile.xpForCurrentLevel}</span>
+                <span className="text-primary font-bold">{profile.xpForCurrentLevel - profile.xpToNextLevel} / {profile.xpForCurrentLevel}</span>
               </div>
               <Progress 
-                value={((profile.xp - profile.xpForCurrentLevel) / profile.xpToNextLevel) * 100} 
+                value={Math.max(0, Math.min(100, ((profile.xpForCurrentLevel - profile.xpToNextLevel) / profile.xpForCurrentLevel) * 100))} 
                 className="h-2 bg-muted"
                 data-testid="progress-sidebar-xp"
               />

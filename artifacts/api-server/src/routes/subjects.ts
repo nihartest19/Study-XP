@@ -1,7 +1,7 @@
 import { Router, type IRouter } from "express";
 import { eq, sql } from "drizzle-orm";
 import { db, subjectsTable, tasksTable } from "@workspace/db";
-import { CreateSubjectBody, GetSubjectsResponse, CreateSubjectResponse } from "@workspace/api-zod";
+import { CreateSubjectBody, GetSubjectsResponse, GetSubjectsResponseItem } from "@workspace/api-zod";
 
 const router: IRouter = Router();
 
@@ -23,7 +23,7 @@ router.post("/subjects", async (req, res): Promise<void> => {
     return;
   }
   const [subject] = await db.insert(subjectsTable).values(parsed.data).returning();
-  res.status(201).json(CreateSubjectResponse.parse({ ...subject, taskCount: 0 }));
+  res.status(201).json(GetSubjectsResponseItem.parse({ ...subject, taskCount: 0 }));
 });
 
 export default router;

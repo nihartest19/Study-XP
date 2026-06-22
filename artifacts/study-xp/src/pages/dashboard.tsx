@@ -22,13 +22,23 @@ export default function Dashboard() {
           <Skeleton className="h-32 rounded-xl" />
           <Skeleton className="h-32 rounded-xl" />
         </div>
+        <Skeleton className="h-[300px] w-full rounded-2xl" />
       </div>
     );
   }
 
-  if (!profile || !stats) return null;
+  if (!profile || !stats) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 text-center p-12">
+        <Trophy className="w-16 h-16 text-muted-foreground opacity-40" />
+        <h2 className="text-xl font-bold text-muted-foreground">Unable to load your dashboard</h2>
+        <p className="text-sm text-muted-foreground max-w-xs">The server may still be starting up. Try refreshing the page in a moment.</p>
+      </div>
+    );
+  }
 
-  const xpProgress = ((profile.xp - profile.xpForCurrentLevel) / profile.xpToNextLevel) * 100;
+  const xpEarned = profile.xpForCurrentLevel - profile.xpToNextLevel;
+  const xpProgress = Math.max(0, Math.min(100, (xpEarned / profile.xpForCurrentLevel) * 100));
 
   return (
     <div className="space-y-6 pb-12">
@@ -50,12 +60,12 @@ export default function Dashboard() {
           
           <div className="flex-1 w-full text-center md:text-left">
             <h2 className="text-3xl font-bold mb-2 tracking-tight">Welcome back, {profile.name}!</h2>
-            <p className="text-primary-foreground/80 mb-6 max-w-lg">Keep up the momentum. You need {profile.xpToNextLevel - (profile.xp - profile.xpForCurrentLevel)} more XP to reach level {profile.level + 1}.</p>
+            <p className="text-primary-foreground/80 mb-6 max-w-lg">Keep up the momentum. You need {profile.xpToNextLevel} more XP to reach level {profile.level + 1}.</p>
             
             <div className="space-y-2">
               <div className="flex justify-between text-sm font-medium font-mono text-primary-foreground/90">
-                <span>{profile.xp - profile.xpForCurrentLevel} XP</span>
-                <span>{profile.xpToNextLevel} XP</span>
+                <span>{xpEarned} XP</span>
+                <span>{profile.xpForCurrentLevel} XP needed</span>
               </div>
               <Progress value={xpProgress} className="h-4 bg-primary-foreground/20 border border-primary-foreground/10" data-testid="progress-hero-xp" />
             </div>
