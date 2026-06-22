@@ -37,8 +37,10 @@ export default function Dashboard() {
     );
   }
 
-  const xpEarned = profile.xpForCurrentLevel - profile.xpToNextLevel;
-  const xpProgress = Math.max(0, Math.min(100, (xpEarned / profile.xpForCurrentLevel) * 100));
+  const xpEarned = Math.max(0, profile.xpForCurrentLevel - profile.xpToNextLevel);
+  const xpProgress = profile.xpForCurrentLevel > 0
+    ? Math.max(0, Math.min(100, (xpEarned / profile.xpForCurrentLevel) * 100))
+    : 0;
 
   return (
     <div className="space-y-6 pb-12">
@@ -64,8 +66,8 @@ export default function Dashboard() {
             
             <div className="space-y-2">
               <div className="flex justify-between text-sm font-medium font-mono text-primary-foreground/90">
-                <span>{xpEarned} XP</span>
-                <span>{profile.xpForCurrentLevel} XP needed</span>
+                <span>{xpEarned} / {profile.xpForCurrentLevel} XP</span>
+                <span>{profile.xpToNextLevel} XP to Level {profile.level + 1}</span>
               </div>
               <Progress value={xpProgress} className="h-4 bg-primary-foreground/20 border border-primary-foreground/10" data-testid="progress-hero-xp" />
             </div>

@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/lib/auth";
 import { Layout } from "@/components/layout";
 
+import Landing from "@/pages/landing";
 import Login from "@/pages/login";
 import Dashboard from "@/pages/dashboard";
 import Tasks from "@/pages/tasks";
@@ -17,9 +18,9 @@ const queryClient = new QueryClient();
 
 function ProtectedRoute({ component: Component }: { component: React.ComponentType }) {
   const { isLoggedIn } = useAuth();
-  
+
   if (!isLoggedIn) {
-    return <Redirect to="/login" />;
+    return <Redirect to="/" />;
   }
 
   return (
@@ -29,11 +30,23 @@ function ProtectedRoute({ component: Component }: { component: React.ComponentTy
   );
 }
 
+function HomeRoute() {
+  const { isLoggedIn } = useAuth();
+  if (isLoggedIn) {
+    return (
+      <Layout>
+        <Dashboard />
+      </Layout>
+    );
+  }
+  return <Landing />;
+}
+
 function Routes() {
   return (
     <Switch>
+      <Route path="/" component={HomeRoute} />
       <Route path="/login" component={Login} />
-      <Route path="/" component={() => <ProtectedRoute component={Dashboard} />} />
       <Route path="/tasks" component={() => <ProtectedRoute component={Tasks} />} />
       <Route path="/badges" component={() => <ProtectedRoute component={Badges} />} />
       <Route path="/subjects" component={() => <ProtectedRoute component={Subjects} />} />
