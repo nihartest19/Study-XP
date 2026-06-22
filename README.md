@@ -10,17 +10,23 @@
 
 ## Screenshots
 
-| Landing Page | Dashboard | Quests |
-|---|---|---|
-| *(Hero → Problem → Features → CTA)* | *(Level banner, XP bar, stats)* | *(Task list with priorities)* |
+### Landing Page
+![Landing Page](screenshots/landing-page.png)
 
-| Badges | Subjects | Settings |
-|---|---|---|
-| *(13 unlockable achievements)* | *(Organised by subject)* | *(Profile & preferences)* |
+### Dashboard
+![Dashboard](screenshots/dashboard.png)
 
-> Add screenshots by capturing the live demo and dropping images into a `docs/screenshots/` folder, then updating the table above.
+### Quests
+![Quests](screenshots/quests.png)
 
----
+### Badges
+![Badges](screenshots/badges.png)
+
+### Subjects
+![Subjects](screenshots/subjects.png)
+
+### Settings
+![Settings](screenshots/settings.png)
 
 ## Features
 
