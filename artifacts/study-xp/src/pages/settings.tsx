@@ -58,10 +58,10 @@ export default function Settings() {
   const handleReset = async () => {
     setIsResetting(true);
     try {
-      const guestId = localStorage.getItem("study_xp_guest_id");
+      const token = localStorage.getItem("study_xp_token");
       const res = await fetch("/api/profile/reset", {
         method: "DELETE",
-        headers: guestId ? { "x-guest-id": guestId } : {},
+        headers: token ? { authorization: `Bearer ${token}` } : {},
       });
       if (!res.ok) throw new Error("Reset failed");
       // Invalidate all cached queries so UI refreshes with fresh data
