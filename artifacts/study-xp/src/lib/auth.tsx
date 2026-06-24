@@ -5,6 +5,7 @@ interface AuthContextType {
   isLoggedIn: boolean;
   guestId: string | null;
   login: () => void;
+  loginWithCredentials: (username: string, password: string) => Promise<{ error?: string }>;
   logout: () => void;
 }
 
@@ -18,6 +19,11 @@ function getOrCreateGuestId(): string {
   return id;
 }
 
+function setUserId(id: string) {
+  localStorage.setItem("study_xp_guest_id", id);
+  localStorage.setItem("study_xp_auth", "true");
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoggedIn, setIsLoggedIn] = useState<boolean>(() => {
     return localStorage.getItem("study_xp_auth") === "true";
@@ -27,6 +33,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   });
   const [, setLocation] = useLocation();
 
+  // Demo mode — random UUID, no credentials required
   const login = () => {
     const id = getOrCreateGuestId();
     setGuestId(id);
@@ -35,9 +42,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setLocation("/");
   };
 
+  // Real login — username + password verified against the database
+  const loginWithCredentials = async (
+    username: string,
+    password: string,
+  ): Promise<{ error?: string }> => {
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ username, password }),
+      });
+
+      if (res.status === 401) {
+        return { error: "Incorrect password. Try again." };
+      }
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        return { error: (body as { error?: string }).error ?? "Something went wrong. Please try again." };
+      }
+
+      const data = (await res.json()) as { userId: string; username: string; isNew: boolean };
+      setUserId(data.userId);
+      setGuestId(data.userId);
+      setIsLoggedIn(true);
+      setLocation("/");
+      return {};
+    } catch {
+      return { error: "Could not reach the server. Check your connection." };
+    }
+  };
+
   const logout = () => {
     localStorage.removeItem("study_xp_auth");
-    // Keep guestId so data persists if they log back in
     setIsLoggedIn(false);
     setLocation("/");
   };
@@ -46,7 +83,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const isAuth = localStorage.getItem("study_xp_auth") === "true";
     setIsLoggedIn(isAuth);
     if (isAuth) {
-      // Ensure a guestId always exists for logged-in users (handles upgrade path)
       const id = getOrCreateGuestId();
       setGuestId(id);
     } else {
@@ -55,7 +91,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ isLoggedIn, guestId, login, logout }}>
+    <AuthContext.Provider value={{ isLoggedIn, guestId, login, loginWithCredentials, logout }}>
       {children}
     </AuthContext.Provider>
   );
