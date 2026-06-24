@@ -65,7 +65,7 @@ export const GetTasksResponseItem = zod.object({
   "description": zod.string().nullish(),
   "completed": zod.boolean(),
   "xpReward": zod.number(),
-  "priority": zod.enum(['low', 'medium', 'high']),
+  "category": zod.enum(['daily_revision', 'study_session', 'assignment', 'quiz', 'project_milestone']),
   "subjectId": zod.number().nullish(),
   "subjectName": zod.string().nullish(),
   "subjectColor": zod.string().nullish(),
@@ -85,10 +85,9 @@ export const GetTasksResponse = zod.array(GetTasksResponseItem)
 export const CreateTaskBody = zod.object({
   "title": zod.string().min(1),
   "description": zod.string().optional(),
-  "priority": zod.enum(['low', 'medium', 'high']),
+  "category": zod.enum(['daily_revision', 'study_session', 'assignment', 'quiz', 'project_milestone']),
   "subjectId": zod.number().nullish(),
-  "dueDate": zod.string().nullish(),
-  "xpReward": zod.number().optional()
+  "dueDate": zod.string().nullish()
 })
 
 
@@ -103,7 +102,7 @@ export const UpdateTaskBody = zod.object({
   "title": zod.string().optional(),
   "description": zod.string().nullish(),
   "completed": zod.boolean().optional(),
-  "priority": zod.enum(['low', 'medium', 'high']).optional(),
+  "category": zod.enum(['daily_revision', 'study_session', 'assignment', 'quiz', 'project_milestone']).optional(),
   "subjectId": zod.number().nullish(),
   "dueDate": zod.string().nullish()
 })
@@ -115,7 +114,7 @@ export const UpdateTaskResponse = zod.object({
   "description": zod.string().nullish(),
   "completed": zod.boolean(),
   "xpReward": zod.number(),
-  "priority": zod.enum(['low', 'medium', 'high']),
+  "category": zod.enum(['daily_revision', 'study_session', 'assignment', 'quiz', 'project_milestone']),
   "subjectId": zod.number().nullish(),
   "subjectName": zod.string().nullish(),
   "subjectColor": zod.string().nullish(),

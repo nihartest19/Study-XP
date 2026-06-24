@@ -240,9 +240,18 @@ components:
         avatar:
           type: ["string", "null"]
 
+    TaskCategory:
+      type: string
+      enum:
+        - daily_revision
+        - study_session
+        - assignment
+        - quiz
+        - project_milestone
+
     Task:
       type: object
-      required: [id, title, completed, xpReward, priority, createdAt]
+      required: [id, title, completed, xpReward, category, createdAt]
       properties:
         id:
           type: integer
@@ -254,9 +263,8 @@ components:
           type: boolean
         xpReward:
           type: integer
-        priority:
-          type: string
-          enum: [low, medium, high]
+        category:
+          $ref: "#/components/schemas/TaskCategory"
         subjectId:
           type: ["integer", "null"]
         subjectName:
@@ -272,22 +280,19 @@ components:
 
     TaskInput:
       type: object
-      required: [title, priority]
+      required: [title, category]
       properties:
         title:
           type: string
           minLength: 1
         description:
           type: string
-        priority:
-          type: string
-          enum: [low, medium, high]
+        category:
+          $ref: "#/components/schemas/TaskCategory"
         subjectId:
           type: ["integer", "null"]
         dueDate:
           type: ["string", "null"]
-        xpReward:
-          type: integer
 
     TaskUpdate:
       type: object
@@ -298,9 +303,8 @@ components:
           type: ["string", "null"]
         completed:
           type: boolean
-        priority:
-          type: string
-          enum: [low, medium, high]
+        category:
+          $ref: "#/components/schemas/TaskCategory"
         subjectId:
           type: ["integer", "null"]
         dueDate:

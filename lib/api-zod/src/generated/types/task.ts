@@ -5,7 +5,7 @@
  * Study XP API
  * OpenAPI spec version: 0.1.0
  */
-import type { TaskPriority } from './taskPriority';
+import type { TaskCategory } from './taskCategory';
 
 export interface Task {
   id: number;
@@ -14,7 +14,7 @@ export interface Task {
   description?: string | null;
   completed: boolean;
   xpReward: number;
-  priority: TaskPriority;
+  category: TaskCategory;
   /** @nullable */
   subjectId?: number | null;
   /** @nullable */

@@ -5,14 +5,14 @@
  * Study XP API
  * OpenAPI spec version: 0.1.0
  */
-import type { TaskUpdatePriority } from './taskUpdatePriority';
+import type { TaskCategory } from './taskCategory';
 
 export interface TaskUpdate {
   title?: string;
   /** @nullable */
   description?: string | null;
   completed?: boolean;
-  priority?: TaskUpdatePriority;
+  category?: TaskCategory;
   /** @nullable */
   subjectId?: number | null;
   /** @nullable */

@@ -27,13 +27,15 @@ export interface ProfileUpdate {
   avatar?: string | null;
 }
 
-export type TaskPriority = typeof TaskPriority[keyof typeof TaskPriority];
+export type TaskCategory = typeof TaskCategory[keyof typeof TaskCategory];
 
 
-export const TaskPriority = {
-  low: 'low',
-  medium: 'medium',
-  high: 'high',
+export const TaskCategory = {
+  daily_revision: 'daily_revision',
+  study_session: 'study_session',
+  assignment: 'assignment',
+  quiz: 'quiz',
+  project_milestone: 'project_milestone',
 } as const;
 
 export interface Task {
@@ -43,7 +45,7 @@ export interface Task {
   description?: string | null;
   completed: boolean;
   xpReward: number;
-  priority: TaskPriority;
+  category: TaskCategory;
   /** @nullable */
   subjectId?: number | null;
   /** @nullable */
@@ -57,42 +59,23 @@ export interface Task {
   createdAt: string;
 }
 
-export type TaskInputPriority = typeof TaskInputPriority[keyof typeof TaskInputPriority];
-
-
-export const TaskInputPriority = {
-  low: 'low',
-  medium: 'medium',
-  high: 'high',
-} as const;
-
 export interface TaskInput {
   /** @minLength 1 */
   title: string;
   description?: string;
-  priority: TaskInputPriority;
+  category: TaskCategory;
   /** @nullable */
   subjectId?: number | null;
   /** @nullable */
   dueDate?: string | null;
-  xpReward?: number;
 }
-
-export type TaskUpdatePriority = typeof TaskUpdatePriority[keyof typeof TaskUpdatePriority];
-
-
-export const TaskUpdatePriority = {
-  low: 'low',
-  medium: 'medium',
-  high: 'high',
-} as const;
 
 export interface TaskUpdate {
   title?: string;
   /** @nullable */
   description?: string | null;
   completed?: boolean;
-  priority?: TaskUpdatePriority;
+  category?: TaskCategory;
   /** @nullable */
   subjectId?: number | null;
   /** @nullable */

@@ -15,11 +15,16 @@ import { calcLevel, xpForLevel, getOrCreateProfile } from "./profile";
 
 const router: IRouter = Router();
 
-const XP_BY_PRIORITY: Record<string, number> = {
-  low: 25,
-  medium: 50,
-  high: 100,
+// Backend-authoritative XP table — frontend cannot override these values
+const XP_BY_CATEGORY: Record<string, number> = {
+  daily_revision: 10,
+  study_session: 20,
+  assignment: 35,
+  quiz: 40,
+  project_milestone: 50,
 };
+
+const DAILY_XP_CAP = 100;
 
 async function getTasksWithSubjects(
   userId: string,
@@ -49,7 +54,7 @@ async function getTasksWithSubjects(
       description: t.description ?? null,
       completed: t.completed,
       xpReward: t.xpReward,
-      priority: t.priority,
+      category: (t.category ?? "study_session") as "daily_revision" | "study_session" | "assignment" | "quiz" | "project_milestone",
       subjectId: t.subjectId ?? null,
       subjectName: subject?.name ?? null,
       subjectColor: subject?.color ?? null,
@@ -89,6 +94,24 @@ async function checkAndAwardBadges(
   return newBadges;
 }
 
+/** Sum of XP earned from tasks completed today (UTC day). */
+async function getXpEarnedToday(userId: string): Promise<number> {
+  const todayStart = new Date();
+  todayStart.setUTCHours(0, 0, 0, 0);
+
+  const [{ total }] = await db
+    .select({ total: sql<number>`COALESCE(SUM(${tasksTable.xpReward}), 0)::int` })
+    .from(tasksTable)
+    .where(
+      and(
+        eq(tasksTable.userId, userId),
+        eq(tasksTable.completed, true),
+        gte(tasksTable.completedAt, todayStart),
+      ),
+    );
+  return total;
+}
+
 router.get("/tasks", async (req, res): Promise<void> => {
   const parsed = GetTasksQueryParams.safeParse(req.query);
   if (!parsed.success) {
@@ -108,7 +131,30 @@ router.post("/tasks", async (req, res): Promise<void> => {
     res.status(400).json({ error: parsed.error.message });
     return;
   }
-  const xpReward = parsed.data.xpReward ?? XP_BY_PRIORITY[parsed.data.priority] ?? 50;
+
+  const { title, category } = parsed.data;
+
+  // Duplicate guard: reject if an identical incomplete task already exists
+  const [duplicate] = await db
+    .select({ id: tasksTable.id })
+    .from(tasksTable)
+    .where(
+      and(
+        eq(tasksTable.userId, req.userId),
+        sql`LOWER(${tasksTable.title}) = LOWER(${title})`,
+        eq(tasksTable.completed, false),
+      ),
+    );
+  if (duplicate) {
+    res.status(409).json({
+      error: "A quest with this name is already active. Complete or delete it first.",
+    });
+    return;
+  }
+
+  // XP is set server-side — client cannot influence it
+  const xpReward = XP_BY_CATEGORY[category] ?? 20;
+
   const [task] = await db
     .insert(tasksTable)
     .values({ ...parsed.data, userId: req.userId, xpReward })
@@ -128,7 +174,7 @@ router.post("/tasks", async (req, res): Promise<void> => {
       description: task.description ?? null,
       completed: task.completed,
       xpReward: task.xpReward,
-      priority: task.priority,
+      category: task.category ?? "study_session",
       subjectId: task.subjectId ?? null,
       subjectName: subject?.name ?? null,
       subjectColor: subject?.color ?? null,
@@ -167,7 +213,18 @@ router.patch("/tasks/:id", async (req, res): Promise<void> => {
 
   if (parsed.data.completed === true && !existing.completed) {
     updates.completedAt = new Date();
-    xpAwarded = existing.xpReward;
+
+    // Enforce daily XP cap — only award what's left of today's allowance
+    const xpToday = await getXpEarnedToday(req.userId);
+    const remaining = Math.max(0, DAILY_XP_CAP - xpToday);
+    xpAwarded = Math.min(existing.xpReward, remaining);
+
+    // If category changed on this update, recalculate xpReward before completing
+    if (parsed.data.category && parsed.data.category !== existing.category) {
+      const newXp = XP_BY_CATEGORY[parsed.data.category] ?? existing.xpReward;
+      updates.xpReward = newXp;
+      xpAwarded = Math.min(newXp, remaining);
+    }
   }
 
   const [task] = await db
@@ -246,7 +303,7 @@ router.patch("/tasks/:id", async (req, res): Promise<void> => {
         description: task.description ?? null,
         completed: task.completed,
         xpReward: task.xpReward,
-        priority: task.priority,
+        category: task.category ?? "study_session",
         subjectId: task.subjectId ?? null,
         subjectName: subject?.name ?? null,
         subjectColor: subject?.color ?? null,

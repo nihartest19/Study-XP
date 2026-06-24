@@ -5,16 +5,15 @@
  * Study XP API
  * OpenAPI spec version: 0.1.0
  */
-import type { TaskInputPriority } from './taskInputPriority';
+import type { TaskCategory } from './taskCategory';
 
 export interface TaskInput {
   /** @minLength 1 */
   title: string;
   description?: string;
-  priority: TaskInputPriority;
+  category: TaskCategory;
   /** @nullable */
   subjectId?: number | null;
   /** @nullable */
   dueDate?: string | null;
-  xpReward?: number;
 }
