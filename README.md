@@ -4,7 +4,7 @@
 
 **Study XP** is a gamified study tracker for students. It wraps everyday homework and revision tasks in an RPG-style progression system to make studying more motivating and consistent.
 
-**Live Demo:** [https://4d1bdb96-e400-4550-8602-209d38ca87ad-00-174qhgou6ybgs.sisko.replit.dev](https://4d1bdb96-e400-4550-8602-209d38ca87ad-00-174qhgou6ybgs.sisko.replit.dev)
+**Live Demo:** https://study-quest--nprusty970.replit.app/
 
 ---
 
